@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>e-Hotels - Réservation</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h1 { color: #333; text-align: center; margin-bottom: 25px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .full-width { grid-column: span 2; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 13px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #007BFF; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .footer-link { text-align: center; margin-top: 20px; }
+        .footer-link a { color: #666; font-size: 14px; text-decoration: none; margin: 0 10px; }
+        .footer-link a:hover { color: #007BFF; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>E-Hotel</h1>
+        
+        <form action="recherche.jsp" method="GET" onsubmit="return validerDates()">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="city">Ville :</label>
+                    <select name="city" id="city">
+                        <option value="Ottawa">Ottawa</option>
+                        <option value="Montreal" selected>Montréal</option>
+                        <option value="Toronto">Toronto</option>
+                        <option value="Quebec">Quebec</option>
+                        <option value="Banff">Banff</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="chain">Chaîne :</label>
+                    <select name="chain" id="chain">
+                        <option value="Tous">Toutes</option>
+                        <option value="Fairmont">Fairmont</option>
+                        <option value="Marriott">Marriott</option>
+                        <option value="Starwood">Starwood</option>
+                        <option value="Group Germain">Group Germain</option>
+                        <option value="Indépendant">Indépendant</option>
+                        <option value="Ritz-Carlton">Ritz-Carlton</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="capacity">Personnes :</label>
+                    <input type="number" id="capacity" name="capacity" min="1" value="2">
+                </div>
+                <div class="form-group">
+                    <label for="rating">Étoiles :</label>
+                    <select name="rating">
+                        <option value="1">1 ★</option>
+                        <option value="2">2 ★</option>
+                        <option value="3">3 ★</option>
+                        <option value="4">4 ★</option>
+                        <option value="5">5 ★</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="max_price">Prix Max :</label>
+                    <input type="number" name="max_price" value="500">
+                </div>
+                <div class="form-group">
+                    <label for="min_size">Taille Min :</label>
+                    <input type="number" name="min_size" value="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="start_date">Arrivée :</label>
+                    <input type="date" id="start_date" name="date_start" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">Départ :</label>
+                    <input type="date" id="end_date" name="date_end" required>
+                </div>
+
+                <div class="full-width">
+                    <button type="submit">Rechercher les disponibilités</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="footer-link">
+            <a href="employe.jsp">👨‍💼 Espace Employé</a> | 
+            <a href="admin.jsp">⚙️ Administration</a>
+        </div>
+    </div>
+
+    <script>
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        // 1. Définir aujourd'hui comme date minimum pour l'arrivée
+        // Le [0] est crucial ici pour que la date soit bien formatée !
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.min = today;
+
+        // Par défaut, le départ minimum est demain
+        let defaultTomorrow = new Date();
+        defaultTomorrow.setDate(defaultTomorrow.getDate() + 1);
+        endDateInput.min = defaultTomorrow.toISOString().split('T')[0];
+
+        // 2. Quand on change la date d'arrivée...
+        startDateInput.addEventListener('change', function() {
+            const chosenArrival = this.value;
+            
+            if (chosenArrival) {
+                let dateArrivee = new Date(chosenArrival);
+                // On ajoute 1 jour à la date d'arrivée
+                dateArrivee.setDate(dateArrivee.getDate() + 1);
+                
+                // On formate la nouvelle date minimum autorisée
+                const minDeparture = dateArrivee.toISOString().split('T')[0];
+                
+                // C'est cette ligne qui "grise" les dates impossibles dans le calendrier !
+                endDateInput.min = minDeparture;
+                
+                // Si l'utilisateur avait mis une mauvaise date avant, on l'efface
+                if (endDateInput.value && endDateInput.value < minDeparture) {
+                    endDateInput.value = "";
+                }
+            }
+        });
+
+        function validerDates() {
+            const start = startDateInput.value;
+            const end = endDateInput.value;
+            if (start && end && start >= end) {
+                alert("La date de départ doit être au moins un jour après la date d'arrivée.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
